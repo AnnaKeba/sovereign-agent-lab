@@ -109,7 +109,12 @@ graph TD;
 
 # Compare the LangGraph graph to exercise3_rasa/data/rules.yml. Min 30 words.
 TASK_D_COMPARISON = """
-FILL ME IN
+The LangGraph graph is just two nodes (other than start, end) — agent and tools — 
+in a loop. The agent decides at every step which tool to call and when to stop;
+no paths are pre-declared. The Rasa flows.yml defines every step explicitly.
+LangGraph is fully dynamic; Rasa CALM is a predetermined sequence where
+the LLM only decides which flow to enter based on the user's input, everything
+else is pre-defined.
 """
 
 # ── Reflection ─────────────────────────────────────────────────────────────
