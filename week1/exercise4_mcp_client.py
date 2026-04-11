@@ -37,6 +37,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from typing import Any, Optional
 
 from dotenv import load_dotenv
 from langchain_core.tools import StructuredTool
@@ -44,6 +45,7 @@ from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+from pydantic import create_model
 
 load_dotenv()
 
@@ -53,6 +55,29 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 SERVER_SCRIPT = str(Path(__file__).parent.parent / "sovereign_agent" / "tools" / "mcp_venue_server.py")
 OUTPUTS_DIR   = Path(__file__).parent / "outputs"
 OUTPUTS_DIR.mkdir(exist_ok=True)
+
+
+# ─── JSON Schema → Pydantic model ────────────────────────────────────────────
+
+_JSON_TO_PY: dict[str, Any] = {
+    "integer": int,
+    "boolean": bool,
+    "string": str,
+    "number": float,
+    "object": dict,
+    "array": list,
+}
+
+
+def _schema_to_pydantic(tool_name: str, input_schema: dict):
+    """Build a Pydantic model from an MCP inputSchema JSON dict."""
+    properties = input_schema.get("properties", {})
+    required = set(input_schema.get("required", []))
+    fields: dict[str, Any] = {}
+    for field, info in properties.items():
+        py_type = _JSON_TO_PY.get(info.get("type", "string"), str)
+        fields[field] = (py_type, ...) if field in required else (Optional[py_type], None)
+    return create_model(tool_name, **fields)
 
 
 # ─── MCP → LangChain bridge ───────────────────────────────────────────────────
@@ -97,6 +122,7 @@ async def discover_tools(server_script: str) -> list:
                     func=_make_mcp_caller(t.name, server_script),
                     name=t.name,
                     description=t.description or f"MCP tool: {t.name}",
+                    args_schema=_schema_to_pydantic(t.name, t.inputSchema),
                 )
                 tools.append(lc_tool)
             return tools, [t.name for t in raw.tools]
@@ -145,7 +171,11 @@ async def main() -> None:
     tools, tool_names = await discover_tools(SERVER_SCRIPT)
     print(f"\n  Discovered {len(tools)} tools: {tool_names}")
 
-    agent  = create_react_agent(llm, tools)
+    agent  = create_react_agent(
+        llm,
+        tools,
+        prompt="If any of the used tools returns no matches or an empty list, report that directly and stop.",
+    )
     output = {"server_script": SERVER_SCRIPT, "tools_discovered": tool_names, "queries": {}}
 
     # ── Query 1: search + detail fetch ────────────────────────────────────────
