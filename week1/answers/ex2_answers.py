@@ -88,7 +88,23 @@ is open to high risk independent actions.
 
 # Paste the Mermaid output from `python exercise2_langgraph.py task_d` here.
 TASK_D_MERMAID_OUTPUT = """
-PASTE MERMAID OUTPUT HERE
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+        __start__([<p>__start__</p>]):::first
+        agent(agent)
+        tools(tools)
+        __end__([<p>__end__</p>]):::last
+        __start__ --> agent;
+        agent -.-> __end__;
+        agent -.-> tools;
+        tools --> agent;
+        classDef default fill:#f2f0ff,line-height:1.2
+        classDef first fill-opacity:0
+        classDef last fill:#bfb6fc
 """
 
 # Compare the LangGraph graph to exercise3_rasa/data/rules.yml. Min 30 words.
@@ -102,5 +118,10 @@ FILL ME IN
 # Must reference a specific behaviour from your run.
 
 MOST_SURPRISING = """
-FILL ME IN
+I guess I was surprised that the model used in exercise 2 was doing the looping
+behavior in Task C.2, the prompt was not good, but modern model have been able to
+do reasonable things with such prompts for a while now.
+Otherwise everything was pretty much expected.
+Most time was spent fixing bugs and inconsitencies in the given code, rather than
+doing the exercises themselves.
 """
