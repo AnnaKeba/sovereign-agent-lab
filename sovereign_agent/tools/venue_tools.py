@@ -34,8 +34,18 @@ about failures depends entirely on what these functions return.
 """
 
 import json
+import os
 import requests
+from dotenv import load_dotenv
+from openai import OpenAI
 from langchain_core.tools import tool
+
+load_dotenv()
+
+client = OpenAI(
+    base_url="https://api.tokenfactory.nebius.com/v1/",
+    api_key=os.getenv("NEBIUS_KEY"),
+)
 
 # ─── Venue database ───────────────────────────────────────────────────────────
 # In Week 2 this gets replaced with a real web search.
@@ -171,12 +181,12 @@ def calculate_catering_cost(guests: int, price_per_head_gbp: float) -> str:
 
 
 @tool
-def generate_event_flyer(venue_name: str, guest_count: int, event_theme: str) -> str:
+def generate_event_flyer(pub_name: str, guest_count: int, event_theme: str) -> str:
     """
     Generate a promotional event flyer image for the confirmed Edinburgh venue.
     Call this AFTER a venue is confirmed, as the final output step.
     Returns a URL to the generated image.
-    venue_name: the confirmed pub name
+    pub_name: the confirmed pub name
     guest_count: confirmed number of attendees
     event_theme: short description, e.g. 'AI Meetup, professional, Scottish'
     """
@@ -194,7 +204,7 @@ def generate_event_flyer(venue_name: str, guest_count: int, event_theme: str) ->
     #
     # 3. Build the prompt — include venue name, guest count, event theme:
     #      prompt = (
-    #          f"Professional event flyer for {event_theme} at {venue_name}, "
+    #          f"Professional event flyer for {event_theme} at {pub_name}, "
     #          f"Edinburgh. {guest_count} guests tonight. Warm lighting, "
     #          f"Scottish architecture background, clean modern typography."
     #      )
@@ -214,12 +224,27 @@ def generate_event_flyer(venue_name: str, guest_count: int, event_theme: str) ->
     # ──────────────────────────────────────────────────────────────────────────
 
     prompt = (
-        f"Professional event flyer for {event_theme} at {venue_name}, "
-        f"Edinburgh. {guest_count} guests."
+        f"Professional event flyer for {event_theme} at {pub_name}, "
+        f"Edinburgh. {guest_count} guests tonight. Warm lighting, "
+        f"Scottish architecture background, clean modern typography."
     )
-    return json.dumps({
-        "success": False,
-        "error": "STUB — see TODO in sovereign_agent/tools/venue_tools.py",
-        "prompt_used": prompt,
-        "image_url": "",
-    })
+
+    try:
+        response = client.images.generate(
+            model="black-forest-labs/flux-schnell",
+            prompt=prompt,
+            n=1,
+        )
+        image_url = response.data[0].url
+        return json.dumps({
+            "success": True,
+            "prompt_used": prompt,
+            "image_url": image_url,
+        })
+    except Exception as exc:
+        return json.dumps({
+            "success": False,
+            "error": str(exc),
+            "prompt_used": prompt,
+            "image_url": "",
+        })

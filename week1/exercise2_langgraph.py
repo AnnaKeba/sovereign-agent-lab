@@ -178,7 +178,8 @@ def task_c() -> list:
     r1 = run_research_agent(
         task=(
             "Check The Bow Bar first for 160 vegan guests tonight. "
-            "If it doesn't meet the requirements, check any other available venue."
+            "If it doesn't meet the requirements, check if any other venue is available."
+            "Return the name of the first available venue found, if you find any."
         ),
         max_turns=8,
     )
