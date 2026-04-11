@@ -107,8 +107,9 @@ the default 0 vegan meals, without asking about it again.
 # LangGraph did in Exercise 2 Scenario 3. Min 40 words.
 OUT_OF_SCOPE_COMPARISON = """
 RASA CALM's handling due to its interactive nature was able to suggest
-an alternative path that it can handle, while LangGraph just said
-that it can't handle the request.
+an alternative path that it can handle and continue on the known path,
+while LangGraph just said that it can't handle the request, because obviously
+it can't interact with the user, other than by initial prompt by design.
 """
 
 # ── Task B: Cutoff guard ───────────────────────────────────────────────────
