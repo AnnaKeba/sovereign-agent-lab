@@ -122,13 +122,34 @@ def run_research_agent(task: str, max_turns: int = 8) -> dict:
         role    = getattr(m, "type", "unknown")
         content = m.content
 
-        # Tool-call messages have structured list content
+        # FIX to make exercise 2A work.
+        # Parse tool call formats coming from different LLM versions:
+        # - list of structured tool_use/ function dicts
+        # - JSON string containing a list of dicts
+        # - JSON string containing a list of JSON-encoded dict strings
+        if isinstance(content, str) and content.strip().startswith("[") and content.strip().endswith("]"):
+            try:
+                parsed = json.loads(content)
+                if isinstance(parsed, list):
+                    if all(isinstance(item, str) for item in parsed):
+                        content = [json.loads(item) for item in parsed]
+                    else:
+                        content = parsed
+            except json.JSONDecodeError:
+                pass
+
+        if isinstance(content, list) and all(isinstance(item, str) for item in content):
+            try:
+                content = [json.loads(item) for item in content]
+            except json.JSONDecodeError:
+                pass
+
         if isinstance(content, list):
             for block in content:
-                if isinstance(block, dict) and block.get("type") == "tool_use":
+                if isinstance(block, dict) and block.get("type") in ["tool_use", "function"]:
                     entry = {
-                        "tool": block["name"],
-                        "args": block.get("input", {}),
+                        "tool": block.get("name"),
+                        "args": block.get("input", block.get("parameters", {})),
                     }
                     tool_calls_made.append(entry)
                     full_trace.append({"role": "tool_call", **entry})
