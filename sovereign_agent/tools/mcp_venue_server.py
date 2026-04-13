@@ -79,20 +79,20 @@ def search_venues(min_capacity: int, requires_vegan: bool) -> str:
 
 
 @mcp.tool()
-def get_venue_details(pub_name: str) -> str:
+def get_venue_details(venue_name: str) -> str:
     """
     Get full details for a specific Edinburgh venue by its exact name.
     Returns capacity, vegan availability, status, and address.
-    pub_name must match exactly a name returned by search_venues.
+    venue_name must match exactly a name returned by search_venues.
     """
-    venue = VENUES.get(pub_name)
+    venue = VENUES.get(venue_name)
     if not venue:
         return json.dumps({
             "success": False,
-            "error": f"Venue not found: '{pub_name}'",
+            "error": f"Venue not found: '{venue_name}'",
             "known_venues": list(VENUES.keys()),
         })
-    return json.dumps({"success": True, "name": pub_name, **venue})
+    return json.dumps({"success": True, "name": venue_name, **venue})
 
 
 if __name__ == "__main__":

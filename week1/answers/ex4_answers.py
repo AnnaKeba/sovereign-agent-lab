@@ -34,17 +34,53 @@ Also MCP server tools can be used by multiple different agents without
 modifications needed.
 """
 
-# ── Week 5 architecture ────────────────────────────────────────────────────
-# Describe your full sovereign agent at Week 5 scale.
-# At least 5 bullet points. Each bullet must be a complete sentence
-# naming a component and explaining why that component does that job.
+# ── PyNanoClaw architecture — SPECULATION QUESTION ─────────────────────────
+#
+# (The variable below is still called WEEK_5_ARCHITECTURE because the
+# grader reads that exact name. Don't rename it — but read the updated
+# prompt: the question is now about PyNanoClaw, the hybrid system the
+# final assignment will have you build.)
+#
+# This is a forward-looking, speculative question. You have NOT yet seen
+# the material that covers the planner/executor split, memory, or the
+# handoff bridge in detail — that is what the final assignment (releases
+# 2026-04-18) is for. The point of asking it here is to check that you
+# have read PROGRESS.md and can imagine how the Week 1 pieces grow into
+# PyNanoClaw.
+#
+# Read PROGRESS.md in the repo root. Then write at least 5 bullet points
+# describing PyNanoClaw as you imagine it at final-assignment scale.
+#
+# Each bullet should:
+#   - Name a component (e.g. "Planner", "Memory store", "Handoff bridge",
+#     "Rasa MCP gateway")
+#   - Say in one clause what that component does and which half of
+#     PyNanoClaw it lives in (the autonomous loop, the structured agent,
+#     or the shared layer between them)
+#
+# You are not being graded on getting the "right" architecture — there
+# isn't one right answer. You are being graded on whether your description
+# is coherent and whether you have thought about which Week 1 file becomes
+# which PyNanoClaw component.
+#
+# Example of the level of detail we want:
+#   - The Planner is a strong-reasoning model (e.g. Nemotron-3-Super or
+#     Qwen3-Next-Thinking) that takes the raw task and produces an ordered
+#     list of subgoals. It lives upstream of the ReAct loop in the
+#     autonomous-loop half of PyNanoClaw, so the Executor never sees an
+#     ambiguous task.
 
 WEEK_5_ARCHITECTURE = """
-- FILL ME IN
-- FILL ME IN
-- FILL ME IN
-- FILL ME IN
-- FILL ME IN
+- Planner: upstream reasoning model that breaks the raw task into subgoals before
+  the ReAct loop starts — lives in the autonomous-loop half.
+- Executor: research_agent.py from Week 1, the fast inner-loop worker that calls
+  tools and iterates inside the autonomous half.
+- Shared MCP tool server: both halves discover tools from it dynamically, so
+  neither is coupled to specific tool implementations.
+- Handoff bridge: routes control between the loop and the structured agent when
+  one half needs what the other does — research vs. human conversation.
+- Rasa CALM structured agent: handles the auditable, high-stakes conversational
+  tasks (deposit calls, confirmations) in the structured-agent half.
 """
 
 # ── The guiding question ───────────────────────────────────────────────────
@@ -52,5 +88,11 @@ WEEK_5_ARCHITECTURE = """
 # Must reference specific things you observed in your runs. Min 60 words.
 
 GUIDING_QUESTION_ANSWER = """
-FILL ME IN
+LangGraph for research, Rasa for the call. In the Exercise 2 runs, the ReAct loop
+naturally pivoted when Bow Bar was full and chained tools in whatever order made
+sense — that flexibility is the point. Rasa did the opposite: fixed flow, explicit
+escalation rule when the deposit was too high, no improvisation. Swapping feels
+wrong because Rasa can't reason across unknown tool outputs, and the ReAct loop has no business-rule guardrails
+(it could plausibly confirm a deposit it shouldn't). Each one breaks badly in the
+other's role.
 """
